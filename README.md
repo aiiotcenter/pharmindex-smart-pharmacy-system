@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smart Pharmacy (Akıllı Eczane)
 
-## Getting Started
+Next.js tabanlı akıllı eczane yönetim sistemi.
 
-First, run the development server:
+## Hızlı Kurulum (GitHub'dan indirenler için)
+
+**Gereksinimler:** Node.js 20+, Docker Desktop
+
+```bash
+git clone <repo-url>
+cd smart_pharmacy
+npm install
+copy .env.example .env.local   # Windows
+# cp .env.example .env.local   # Mac/Linux
+
+docker compose up -d oracle    # Oracle hazır olana kadar 2-5 dk bekleyin
+docker compose ps              # "healthy" görünmeli
+
+npm run db:setup               # tablolar + örnek veri
+npm run dev                    # http://localhost:3000/login
+```
+
+> Port **1521** bilgisayarınızda zaten Oracle kullanıyorsa sorun olmaz. Docker Oracle **1522** portunda çalışır (`.env.example` buna göre ayarlı).
+
+## Veritabanı
+
+- **Oracle Database** (`oracledb` driver)
+- **10 tablo**: users, diseases, active_ingredients, medicines, medicine_ingredients, user_diseases, user_allergies, user_medicines, medicine_schedules, disease_medicines
+- **Prisma schema** (`prisma/schema.prisma`) şema dokümantasyonu içindir. Prisma Client resmi olarak Oracle desteklemediği için migration'lar SQL dosyaları ile uygulanır.
+
+## Kurulum
+
+1. Bağımlılıkları yükleyin:
+
+```bash
+npm install
+```
+
+2. `.env.local` dosyasını `.env.example` üzerinden oluşturun.
+
+3. Oracle veritabanını başlatın:
+
+```bash
+docker compose up -d oracle
+```
+
+4. Migration ve seed:
+
+```bash
+npm run db:setup
+```
+
+5. Uygulamayı çalıştırın:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Demo Kullanıcılar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Kullanıcı | Şifre |
+|-----------|-------|
+| ahmet_yilmaz | Password123! |
+| ayse_kaya | Password123! |
+| mehmet_demir | Password123! |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Endpoints
 
-## Learn More
+- `POST /api/auth/register` — Kayıt
+- `POST /api/auth/login` — Giriş (JWT httpOnly cookie)
+- `GET /api/users` — Kullanıcı listesi (auth gerekli)
+- `GET /api/medicines?search=` — İlaç arama
+- `GET /api/diseases?search=` — Hastalık arama
+- `GET /api/allergies` — Kullanıcı alerjileri
 
-To learn more about Next.js, take a look at the following resources:
+## Dil Desteği
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+TR / EN — cookie tabanlı locale (`locale=tr|en`)

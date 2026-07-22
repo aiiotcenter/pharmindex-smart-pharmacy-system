@@ -1,0 +1,150 @@
+// Smart Pharmacy — Oracle schema reference
+// Prisma Client does not support Oracle DB officially.
+// Migrations are applied via SQL files in prisma/migrations/ using npm run db:migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId    Int      @id @default(autoincrement()) @map("user_id")
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(100)
+  surname   String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  birthDate DateTime @map("birth_date") @db.Date
+  gender    String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userDiseases  UserDisease[]
+  userAllergies UserAllergy[]
+  userMedicines UserMedicine[]
+
+  @@map("users")
+}
+
+model Disease {
+  diseaseId     Int     @id @default(autoincrement()) @map("disease_id")
+  nameEn        String  @map("name_en") @db.VarChar(150)
+  nameTr        String  @map("name_tr") @db.VarChar(150)
+  descriptionEn String? @map("description_en") @db.VarChar(2000)
+  descriptionTr String? @map("description_tr") @db.VarChar(2000)
+
+  userDiseases    UserDisease[]
+  diseaseMedicines DiseaseMedicine[]
+
+  @@map("diseases")
+}
+
+model ActiveIngredient {
+  ingredientId  Int     @id @default(autoincrement()) @map("ingredient_id")
+  nameEn        String  @map("name_en") @db.VarChar(150)
+  nameTr        String  @map("name_tr") @db.VarChar(150)
+  descriptionEn String? @map("description_en") @db.VarChar(2000)
+  descriptionTr String? @map("description_tr") @db.VarChar(2000)
+
+  medicineIngredients MedicineIngredient[]
+  userAllergies       UserAllergy[]
+
+  @@map("active_ingredients")
+}
+
+model Medicine {
+  medicineId    Int     @id @default(autoincrement()) @map("medicine_id")
+  nameEn        String  @map("name_en") @db.VarChar(150)
+  nameTr        String  @map("name_tr") @db.VarChar(150)
+  descriptionEn String? @map("description_en") @db.VarChar(2000)
+  descriptionTr String? @map("description_tr") @db.VarChar(2000)
+  dosageForm    String? @map("dosage_form") @db.VarChar(100)
+
+  medicineIngredients MedicineIngredient[]
+  userMedicines       UserMedicine[]
+  diseaseMedicines    DiseaseMedicine[]
+
+  @@map("medicines")
+}
+
+model MedicineIngredient {
+  medicineId   Int    @map("medicine_id")
+  ingredientId Int    @map("ingredient_id")
+  amountMg     Float? @map("amount_mg")
+
+  medicine   Medicine         @relation(fields: [medicineId], references: [medicineId])
+  ingredient ActiveIngredient @relation(fields: [ingredientId], references: [ingredientId])
+
+  @@id([medicineId, ingredientId])
+  @@map("medicine_ingredients")
+}
+
+model UserDisease {
+  userId        Int       @map("user_id")
+  diseaseId     Int       @map("disease_id")
+  diagnosedDate DateTime? @map("diagnosed_date") @db.Date
+
+  user    User    @relation(fields: [userId], references: [userId])
+  disease Disease @relation(fields: [diseaseId], references: [diseaseId])
+
+  @@id([userId, diseaseId])
+  @@map("user_diseases")
+}
+
+model UserAllergy {
+  userId       Int     @map("user_id")
+  ingredientId Int     @map("ingredient_id")
+  severity     String? @db.VarChar(20)
+  notes        String? @db.VarChar(500)
+
+  user       User             @relation(fields: [userId], references: [userId])
+  ingredient ActiveIngredient @relation(fields: [ingredientId], references: [ingredientId])
+
+  @@id([userId, ingredientId])
+  @@map("user_allergies")
+}
+
+model UserMedicine {
+  userMedicineId Int       @id @default(autoincrement()) @map("user_medicine_id")
+  userId         Int       @map("user_id")
+  medicineId     Int       @map("medicine_id")
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  dosage         String?   @db.VarChar(100)
+  isActive       Int       @default(1) @map("is_active")
+
+  user     User              @relation(fields: [userId], references: [userId])
+  medicine Medicine          @relation(fields: [medicineId], references: [medicineId])
+  schedules MedicineSchedule[]
+
+  @@map("user_medicines")
+}
+
+model MedicineSchedule {
+  scheduleId     Int     @id @default(autoincrement()) @map("schedule_id")
+  userMedicineId Int     @map("user_medicine_id")
+  frequencyType  String  @map("frequency_type") @db.VarChar(20)
+  dayOfWeek      Int?    @map("day_of_week")
+  dayOfMonth     Int?    @map("day_of_month")
+  timeOfDay      String  @map("time_of_day") @db.VarChar(5)
+  notes          String? @db.VarChar(500)
+
+  userMedicine UserMedicine @relation(fields: [userMedicineId], references: [userMedicineId])
+
+  @@map("medicine_schedules")
+}
+
+model DiseaseMedicine {
+  diseaseId          Int     @map("disease_id")
+  medicineId         Int     @map("medicine_id")
+  recommendationNote String? @map("recommendation_note") @db.VarChar(1000)
+
+  disease  Disease  @relation(fields: [diseaseId], references: [diseaseId])
+  medicine Medicine @relation(fields: [medicineId], references: [medicineId])
+
+  @@id([diseaseId, medicineId])
+  @@map("disease_medicines")
+}
