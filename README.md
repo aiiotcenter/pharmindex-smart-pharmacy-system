@@ -1,5 +1,3 @@
-# Smart Pharmacy (Akıllı Eczane)
-
 Next.js tabanlı akıllı eczane yönetim sistemi.
 
 ## Hızlı Kurulum (GitHub'dan indirenler için)
@@ -76,3 +74,6 @@ npm run dev
 ## Dil Desteği
 
 TR / EN — cookie tabanlı locale (`locale=tr|en`)
+=======
+# pharmindex-smart-pharmacy-system
+>>>>>>> 9434dbf015ed66e44dc14df486872df4fde79ba4
