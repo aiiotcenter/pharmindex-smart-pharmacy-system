@@ -9,7 +9,11 @@
     "lint": "eslint",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:setup": "npm run db:migrate && npm run db:seed"
+    "db:seed-admin": "tsx scripts/seed-admin.ts",
+    "db:seed-encyclopedia": "tsx scripts/seed-encyclopedia.ts",
+    "db:seed-bilingual": "tsx scripts/seed-bilingual.ts",
+    "db:seed-all": "npm run db:seed-admin && npm run db:seed-encyclopedia && npm run db:seed-bilingual",
+    "db:setup": "npm run db:migrate && npm run db:seed && npm run db:seed-all"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

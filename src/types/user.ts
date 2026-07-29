@@ -1,4 +1,5 @@
 export type Gender = "MALE" | "FEMALE" | "OTHER";
+export type UserRole = "USER" | "ADMIN";
 
 export interface User {
   userId: number;
@@ -8,6 +9,7 @@ export interface User {
   email: string;
   birthDate: string;
   gender: Gender;
+  role: UserRole;
   createdAt?: string;
 }
 

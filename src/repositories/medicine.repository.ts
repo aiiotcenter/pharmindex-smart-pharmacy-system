@@ -1,4 +1,4 @@
-import { executeQuery } from "@/lib/db";
+import { executeQuery, executeMutation } from "@/lib/db";
 import type { Medicine } from "@/types/medicine";
 
 interface DbMedicineRow {
@@ -82,4 +82,76 @@ export async function getMedicineIngredientIds(
   );
 
   return rows.map((row) => row.INGREDIENT_ID);
+}
+
+export async function createMedicine(input: {
+  nameEn: string;
+  nameTr: string;
+  dosageForm?: string;
+  usesTr?: string;
+  usesEn?: string;
+  sideEffectsTr?: string;
+  sideEffectsEn?: string;
+}): Promise<Medicine> {
+  await executeMutation(
+    `
+    INSERT INTO medicines (
+      name_en, name_tr, dosage_form,
+      uses_tr, uses_en, side_effects_tr, side_effects_en
+    )
+    VALUES (
+      :nameEn, :nameTr, :dosageForm,
+      :usesTr, :usesEn, :sideEffectsTr, :sideEffectsEn
+    )
+    `,
+    {
+      nameEn: input.nameEn,
+      nameTr: input.nameTr,
+      dosageForm: input.dosageForm ?? null,
+      usesTr: input.usesTr ?? null,
+      usesEn: input.usesEn ?? null,
+      sideEffectsTr: input.sideEffectsTr ?? null,
+      sideEffectsEn: input.sideEffectsEn ?? null,
+    }
+  );
+
+  const rows = await executeQuery<DbMedicineRow>(
+    `
+    SELECT medicine_id, name_en, name_tr, description_en, description_tr, dosage_form
+    FROM medicines
+    WHERE medicine_id = (SELECT MAX(medicine_id) FROM medicines)
+    `
+  );
+
+  if (!rows[0]) {
+    throw new Error("Failed to create medicine.");
+  }
+
+  return mapMedicine(rows[0]);
+}
+
+export async function linkMedicineIngredient(
+  medicineId: number,
+  ingredientId: number,
+  amountMg?: number | null
+): Promise<void> {
+  await executeMutation(
+    `
+    INSERT INTO medicine_ingredients (medicine_id, ingredient_id, amount_mg)
+    VALUES (:medicineId, :ingredientId, :amountMg)
+    `,
+    {
+      medicineId,
+      ingredientId,
+      amountMg: amountMg ?? null,
+    }
+  );
+}
+
+export async function deleteMedicine(medicineId: number): Promise<boolean> {
+  const affected = await executeMutation(
+    "DELETE FROM medicines WHERE medicine_id = :medicineId",
+    { medicineId }
+  );
+  return affected > 0;
 }

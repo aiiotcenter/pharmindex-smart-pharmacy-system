@@ -15,6 +15,8 @@ interface DbUserAllergyRow {
   INGREDIENT_ID: number;
   SEVERITY?: string | null;
   NOTES?: string | null;
+  NOTES_TR?: string | null;
+  NOTES_EN?: string | null;
   NAME_EN: string;
   NAME_TR: string;
   DESCRIPTION_EN?: string | null;
@@ -61,6 +63,8 @@ export async function listUserAllergies(userId: number): Promise<
       ua.ingredient_id,
       ua.severity,
       ua.notes,
+      ua.notes_tr,
+      ua.notes_en,
       ai.name_en,
       ai.name_tr,
       ai.description_en,
@@ -78,6 +82,8 @@ export async function listUserAllergies(userId: number): Promise<
     ingredientId: row.INGREDIENT_ID,
     severity: row.SEVERITY as UserAllergy["severity"],
     notes: row.NOTES,
+    notesTr: row.NOTES_TR,
+    notesEn: row.NOTES_EN,
     nameEn: row.NAME_EN,
     nameTr: row.NAME_TR,
     descriptionEn: row.DESCRIPTION_EN,

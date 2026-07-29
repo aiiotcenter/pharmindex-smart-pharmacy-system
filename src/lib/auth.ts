@@ -7,6 +7,7 @@ const TOKEN_COOKIE = "auth_token";
 export interface JwtPayload {
   userId: number;
   username: string;
+  role: string;
 }
 
 function getJwtSecret(): Uint8Array {
@@ -36,6 +37,7 @@ export async function signToken(payload: JwtPayload): Promise<string> {
   return new SignJWT({
     userId: payload.userId,
     username: payload.username,
+    role: payload.role,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -48,12 +50,13 @@ export async function verifyToken(token: string): Promise<JwtPayload | null> {
     const { payload } = await jwtVerify(token, getJwtSecret());
     const userId = Number(payload.userId);
     const username = String(payload.username);
+    const role = String(payload.role ?? "USER");
 
     if (!userId || !username) {
       return null;
     }
 
-    return { userId, username };
+    return { userId, username, role };
   } catch {
     return null;
   }

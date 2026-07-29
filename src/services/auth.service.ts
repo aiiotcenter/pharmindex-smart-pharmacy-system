@@ -13,7 +13,11 @@ export async function register(
 ): Promise<AuthResponse> {
   const hashedPassword = await hashPassword(input.password);
   const user = await registerUser({ ...input, password: hashedPassword });
-  const token = await signToken({ userId: user.userId, username: user.username });
+  const token = await signToken({
+    userId: user.userId,
+    username: user.username,
+    role: user.role,
+  });
 
   return { user, token };
 }
@@ -31,7 +35,11 @@ export async function login(input: LoginInput): Promise<AuthResponse> {
   }
 
   const { password: _password, ...user } = userRecord;
-  const token = await signToken({ userId: user.userId, username: user.username });
+  const token = await signToken({
+    userId: user.userId,
+    username: user.username,
+    role: user.role,
+  });
 
   return { user, token };
 }

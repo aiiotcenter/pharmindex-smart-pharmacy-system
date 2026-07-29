@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import { LogoutButton } from "@/components/LogoutButton";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import "./globals.css";
 
@@ -32,7 +31,6 @@ export default function RootLayout({
       >
         <I18nProvider>
           {children}
-          <LogoutButton />
           <Toaster richColors position="top-right" closeButton />
         </I18nProvider>
       </body>

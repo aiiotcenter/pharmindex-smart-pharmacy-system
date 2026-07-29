@@ -1,5 +1,5 @@
 import { executeQuery, executeMutation } from "@/lib/db";
-import type { Gender, RegisterInput, User, UserRecord } from "@/types/user";
+import type { Gender, RegisterInput, User, UserRecord, UserRole } from "@/types/user";
 
 interface DbUserRow {
   USER_ID: number;
@@ -10,6 +10,7 @@ interface DbUserRow {
   EMAIL: string;
   BIRTH_DATE: Date;
   GENDER: Gender;
+  ROLE: UserRole;
   CREATED_AT?: Date;
 }
 
@@ -22,6 +23,7 @@ function mapUser(row: DbUserRow, includePassword = false): User | UserRecord {
     email: row.EMAIL,
     birthDate: row.BIRTH_DATE.toISOString().slice(0, 10),
     gender: row.GENDER,
+    role: row.ROLE ?? "USER",
     createdAt: row.CREATED_AT?.toISOString(),
   };
 
@@ -32,12 +34,16 @@ function mapUser(row: DbUserRow, includePassword = false): User | UserRecord {
   return base;
 }
 
+const USER_SELECT = `
+  user_id, username, password, name, surname, email, birth_date, gender, role, created_at
+`;
+
 export async function findUserByUsername(
   username: string
 ): Promise<UserRecord | null> {
   const rows = await executeQuery<DbUserRow>(
     `
-    SELECT user_id, username, password, name, surname, email, birth_date, gender, created_at
+    SELECT ${USER_SELECT}
     FROM users
     WHERE username = :username
     `,
@@ -54,7 +60,7 @@ export async function findUserByUsername(
 export async function findUserByEmail(email: string): Promise<User | null> {
   const rows = await executeQuery<DbUserRow>(
     `
-    SELECT user_id, username, password, name, surname, email, birth_date, gender, created_at
+    SELECT ${USER_SELECT}
     FROM users
     WHERE email = :email
     `,
@@ -71,7 +77,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 export async function findUserById(userId: number): Promise<User | null> {
   const rows = await executeQuery<DbUserRow>(
     `
-    SELECT user_id, username, password, name, surname, email, birth_date, gender, created_at
+    SELECT ${USER_SELECT}
     FROM users
     WHERE user_id = :userId
     `,
@@ -90,8 +96,8 @@ export async function createUser(
 ): Promise<User> {
   await executeMutation(
     `
-    INSERT INTO users (username, password, name, surname, email, birth_date, gender)
-    VALUES (:username, :password, :name, :surname, :email, TO_DATE(:birthDate, 'YYYY-MM-DD'), :gender)
+    INSERT INTO users (username, password, name, surname, email, birth_date, gender, role)
+    VALUES (:username, :password, :name, :surname, :email, TO_DATE(:birthDate, 'YYYY-MM-DD'), :gender, 'USER')
     `,
     {
       username: input.username,
@@ -116,7 +122,7 @@ export async function createUser(
 export async function listUsers(): Promise<User[]> {
   const rows = await executeQuery<DbUserRow>(
     `
-    SELECT user_id, username, password, name, surname, email, birth_date, gender, created_at
+    SELECT ${USER_SELECT}
     FROM users
     ORDER BY user_id
     `

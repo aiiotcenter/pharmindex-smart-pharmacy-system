@@ -3,4 +3,6 @@ export interface UserAllergy {
   ingredientId: number;
   severity?: "MILD" | "MODERATE" | "SEVERE" | null;
   notes?: string | null;
+  notesTr?: string | null;
+  notesEn?: string | null;
 }

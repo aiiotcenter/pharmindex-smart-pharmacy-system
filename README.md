@@ -56,11 +56,12 @@ npm run dev
 
 ## Demo Kullanıcılar
 
-| Kullanıcı | Şifre |
-|-----------|-------|
-| ahmet_yilmaz | Password123! |
-| ayse_kaya | Password123! |
-| mehmet_demir | Password123! |
+| Kullanıcı | Şifre | Rol |
+|-----------|-------|-----|
+| ahmet_yilmaz | Password123! | USER |
+| ayse_kaya | Password123! | USER |
+| mehmet_demir | Password123! | USER |
+| admin | admin123! | ADMIN |
 
 ## API Endpoints
 
@@ -74,6 +75,3 @@ npm run dev
 ## Dil Desteği
 
 TR / EN — cookie tabanlı locale (`locale=tr|en`)
-=======
-# pharmindex-smart-pharmacy-system
->>>>>>> 9434dbf015ed66e44dc14df486872df4fde79ba4
