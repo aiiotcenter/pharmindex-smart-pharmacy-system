@@ -1,12 +1,20 @@
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
+import {
+  canAccessAdminPanel,
+  canAccessDoctorPanel,
+  Role,
+  type ViewMode,
+  isPatientView as checkPatientView,
+} from "@/lib/roles";
 import { findUserById } from "@/repositories/user.repository";
-import type { User, UserRole } from "@/types/user";
+import type { User } from "@/types/user";
 
 export interface AuthContext {
   userId: number;
   username: string;
-  role: UserRole;
+  roleId: number;
+  viewMode?: ViewMode;
   user: User;
 }
 
@@ -31,11 +39,23 @@ export async function getAuthContext(
   return {
     userId: user.userId,
     username: user.username,
-    role: user.role,
+    roleId: user.roleId,
+    viewMode: payload.viewMode,
     user,
   };
 }
 
 export function isAdmin(context: AuthContext | null): boolean {
-  return context?.role === "ADMIN";
+  if (!context) return false;
+  return canAccessAdminPanel(context.roleId, context.viewMode);
+}
+
+export function isDoctor(context: AuthContext | null): boolean {
+  if (!context) return false;
+  return canAccessDoctorPanel(context.roleId, context.viewMode);
+}
+
+export function isPatient(context: AuthContext | null): boolean {
+  if (!context) return false;
+  return checkPatientView(context.roleId, context.viewMode);
 }

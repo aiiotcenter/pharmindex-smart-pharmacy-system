@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
+import { legacyRoleToId, Role, defaultPanelViewMode, type ViewMode } from "@/lib/roles";
 
 const SALT_ROUNDS = 12;
 const TOKEN_COOKIE = "auth_token";
@@ -7,7 +8,8 @@ const TOKEN_COOKIE = "auth_token";
 export interface JwtPayload {
   userId: number;
   username: string;
-  role: string;
+  roleId: number;
+  viewMode?: ViewMode;
 }
 
 function getJwtSecret(): Uint8Array {
@@ -33,12 +35,22 @@ export async function verifyPassword(
   return bcrypt.compare(password, hashedPassword);
 }
 
+export function defaultViewMode(roleId: number): ViewMode | undefined {
+  return defaultPanelViewMode(roleId);
+}
+
 export async function signToken(payload: JwtPayload): Promise<string> {
-  return new SignJWT({
+  const body: Record<string, unknown> = {
     userId: payload.userId,
     username: payload.username,
-    role: payload.role,
-  })
+    roleId: payload.roleId,
+  };
+
+  if (payload.viewMode) {
+    body.viewMode = payload.viewMode;
+  }
+
+  return new SignJWT(body)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(getJwtExpiresIn())
@@ -50,13 +62,32 @@ export async function verifyToken(token: string): Promise<JwtPayload | null> {
     const { payload } = await jwtVerify(token, getJwtSecret());
     const userId = Number(payload.userId);
     const username = String(payload.username);
-    const role = String(payload.role ?? "USER");
+
+    let roleId = Number(payload.roleId);
+    if (!roleId && payload.role) {
+      roleId = legacyRoleToId(String(payload.role));
+    }
+    if (!roleId) {
+      roleId = Role.USER;
+    }
 
     if (!userId || !username) {
       return null;
     }
 
-    return { userId, username, role };
+    const rawViewMode = payload.viewMode;
+    const viewMode: ViewMode | undefined =
+      rawViewMode === "ADMIN" || rawViewMode === "DOCTOR" || rawViewMode === "USER"
+        ? rawViewMode
+        : defaultViewMode(roleId);
+
+    return {
+      userId,
+      username,
+      roleId,
+      viewMode:
+        roleId === Role.ADMIN || roleId === Role.DOCTOR ? viewMode : undefined,
+    };
   } catch {
     return null;
   }

@@ -21,13 +21,16 @@ export default function RegisterPage() {
     email: "",
     birthDate: "",
     gender: "MALE" as (typeof GENDERS)[number],
+    applyAsDoctor: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = useCallback(
-    (field: keyof typeof form, value: string) => {
+    (field: keyof typeof form, value: string | boolean) => {
       setForm((prev) => ({ ...prev, [field]: value }));
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+      if (typeof value === "string") {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
+      }
     },
     []
   );
@@ -156,6 +159,16 @@ export default function RegisterPage() {
           error={errors.confirmPassword}
           onChange={(value) => handleChange("confirmPassword", value)}
         />
+
+        <label className="flex items-start gap-3 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+          <input
+            type="checkbox"
+            checked={form.applyAsDoctor}
+            onChange={(event) => handleChange("applyAsDoctor", event.target.checked)}
+            className="mt-0.5"
+          />
+          <span>{t.applyAsDoctor}</span>
+        </label>
 
         <button
           type="submit"

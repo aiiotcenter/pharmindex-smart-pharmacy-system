@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
+import { canAccessAdminPanel, canAccessDoctorPanel } from "@/lib/roles";
 
 const protectedRoutes = ["/dashboard"];
 
@@ -20,7 +21,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith("/dashboard/admin") && payload?.role !== "ADMIN") {
+  if (
+    pathname.startsWith("/dashboard/admin") &&
+    payload &&
+    !canAccessAdminPanel(payload.roleId, payload.viewMode)
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (
+    pathname.startsWith("/dashboard/doctor") &&
+    payload &&
+    !canAccessDoctorPanel(payload.roleId, payload.viewMode)
+  ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

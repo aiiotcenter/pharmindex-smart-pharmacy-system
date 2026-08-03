@@ -1,2 +1,2 @@
 export const runtime = "nodejs";
-export { GET } from "@/server/handlers/allergies.handler";
+export { GET, POST, DELETE } from "@/server/handlers/allergies.handler";

@@ -34,7 +34,7 @@ async function main(): Promise<void> {
 
     if (rows.length > 0) {
       await connection.execute(
-        `UPDATE users SET password = :password, role = 'ADMIN' WHERE username = :username`,
+        `UPDATE users SET password = :password, role_id = 1 WHERE username = :username`,
         { password: hashedPassword, username: ADMIN_USERNAME },
         { autoCommit: true }
       );
@@ -44,8 +44,8 @@ async function main(): Promise<void> {
 
     await connection.execute(
       `
-      INSERT INTO users (username, password, name, surname, email, birth_date, gender, role)
-      VALUES (:username, :password, 'Admin', 'User', 'admin@smartpharmacy.com', DATE '1990-01-01', 'OTHER', 'ADMIN')
+      INSERT INTO users (username, password, name, surname, email, birth_date, gender, role_id)
+      VALUES (:username, :password, 'Admin', 'User', 'admin@smartpharmacy.com', DATE '1990-01-01', 'OTHER', 1)
       `,
       { username: ADMIN_USERNAME, password: hashedPassword },
       { autoCommit: true }

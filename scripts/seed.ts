@@ -119,10 +119,10 @@ async function main(): Promise<void> {
 
     await connection.execute(
       `
-      INSERT INTO users (username, password, name, surname, email, birth_date, gender, role) VALUES
-      (:u1, :p, 'Ahmet', 'Yilmaz', 'ahmet.yilmaz@example.com', DATE '1985-03-12', 'MALE', 'USER'),
-      (:u2, :p, 'Ayse', 'Kaya', 'ayse.kaya@example.com', DATE '1992-07-25', 'FEMALE', 'USER'),
-      (:u3, :p, 'Mehmet', 'Demir', 'mehmet.demir@example.com', DATE '1978-11-08', 'MALE', 'USER')
+      INSERT INTO users (username, password, name, surname, email, birth_date, gender, role_id) VALUES
+      (:u1, :p, 'Ahmet', 'Yilmaz', 'ahmet.yilmaz@example.com', DATE '1985-03-12', 'MALE', 3),
+      (:u2, :p, 'Ayse', 'Kaya', 'ayse.kaya@example.com', DATE '1992-07-25', 'FEMALE', 3),
+      (:u3, :p, 'Mehmet', 'Demir', 'mehmet.demir@example.com', DATE '1978-11-08', 'MALE', 3)
       `,
       {
         u1: "ahmet_yilmaz",

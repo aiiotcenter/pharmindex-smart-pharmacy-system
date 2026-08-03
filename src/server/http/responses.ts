@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { AuthContext } from "@/lib/api-auth";
-import { isAdmin } from "@/lib/api-auth";
+import { isAdmin, isDoctor } from "@/lib/api-auth";
 
 export function jsonOk<T extends Record<string, unknown>>(
   data: T,
@@ -48,4 +48,8 @@ export function requireAuth(
 
 export function requireAdmin(auth: AuthContext | null): auth is AuthContext {
   return isAdmin(auth);
+}
+
+export function requireDoctor(auth: AuthContext | null): auth is AuthContext {
+  return isDoctor(auth);
 }

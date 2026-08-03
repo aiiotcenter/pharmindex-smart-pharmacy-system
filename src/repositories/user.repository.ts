@@ -1,5 +1,6 @@
 import { executeQuery, executeMutation } from "@/lib/db";
-import type { Gender, RegisterInput, User, UserRecord, UserRole } from "@/types/user";
+import { Role, type RoleId } from "@/lib/roles";
+import type { Gender, RegisterInput, User, UserRecord } from "@/types/user";
 
 interface DbUserRow {
   USER_ID: number;
@@ -10,7 +11,7 @@ interface DbUserRow {
   EMAIL: string;
   BIRTH_DATE: Date;
   GENDER: Gender;
-  ROLE: UserRole;
+  ROLE_ID: number;
   CREATED_AT?: Date;
 }
 
@@ -23,7 +24,7 @@ function mapUser(row: DbUserRow, includePassword = false): User | UserRecord {
     email: row.EMAIL,
     birthDate: row.BIRTH_DATE.toISOString().slice(0, 10),
     gender: row.GENDER,
-    role: row.ROLE ?? "USER",
+    roleId: (row.ROLE_ID ?? Role.USER) as RoleId,
     createdAt: row.CREATED_AT?.toISOString(),
   };
 
@@ -35,7 +36,7 @@ function mapUser(row: DbUserRow, includePassword = false): User | UserRecord {
 }
 
 const USER_SELECT = `
-  user_id, username, password, name, surname, email, birth_date, gender, role, created_at
+  user_id, username, password, name, surname, email, birth_date, gender, role_id, created_at
 `;
 
 export async function findUserByUsername(
@@ -96,8 +97,8 @@ export async function createUser(
 ): Promise<User> {
   await executeMutation(
     `
-    INSERT INTO users (username, password, name, surname, email, birth_date, gender, role)
-    VALUES (:username, :password, :name, :surname, :email, TO_DATE(:birthDate, 'YYYY-MM-DD'), :gender, 'USER')
+    INSERT INTO users (username, password, name, surname, email, birth_date, gender, role_id)
+    VALUES (:username, :password, :name, :surname, :email, TO_DATE(:birthDate, 'YYYY-MM-DD'), :gender, :roleId)
     `,
     {
       username: input.username,
@@ -107,6 +108,7 @@ export async function createUser(
       email: input.email,
       birthDate: input.birthDate,
       gender: input.gender,
+      roleId: Role.USER,
     }
   );
 
@@ -129,6 +131,16 @@ export async function listUsers(): Promise<User[]> {
   );
 
   return rows.map((row) => mapUser(row) as User);
+}
+
+export async function updateUserRole(
+  userId: number,
+  roleId: RoleId
+): Promise<void> {
+  await executeMutation(
+    `UPDATE users SET role_id = :roleId WHERE user_id = :userId`,
+    { userId, roleId }
+  );
 }
 
 export async function usernameExists(username: string): Promise<boolean> {

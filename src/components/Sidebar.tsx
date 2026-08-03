@@ -13,15 +13,14 @@ const navItems = [
   { href: "/dashboard/allergies", labelKey: "myAllergies" as const, icon: "⚠️" },
   { href: "/dashboard/reminders", labelKey: "reminders" as const, icon: "⏰" },
   { href: "/dashboard/health-center", labelKey: "healthCenter" as const, icon: "🔍" },
-  { href: "/dashboard/health", labelKey: "healthInfo" as const, icon: "❤️" },
-  { href: "/dashboard/profile", labelKey: "profile" as const, icon: "👤" },
+  { href: "/dashboard/health-profile", labelKey: "healthProfile" as const, icon: "❤️" },
 ];
 
 export function Sidebar() {
   const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
-  const { isAdmin } = useAuthContext();
+  const { isAdmin, isDoctor, isPatientView } = useAuthContext();
   const { open, close } = useSidebar();
 
   const handleLogout = async () => {
@@ -62,39 +61,56 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {navItems.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={handleNavClick}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  active
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-800"
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{t[item.labelKey]}</span>
-              </Link>
-            );
-          })}
+          {isPatientView
+            ? navItems.map((item) => {
+                const active =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={handleNavClick}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                      active
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-800"
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{t[item.labelKey]}</span>
+                  </Link>
+                );
+              })
+            : null}
+
+          {isDoctor ? (
+            <Link
+              href="/dashboard/doctor"
+              onClick={handleNavClick}
+              className={`${isPatientView ? "mt-4" : ""} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                pathname.startsWith("/dashboard/doctor")
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "border border-blue-200 text-blue-700 hover:bg-blue-50"
+              }`}
+            >
+              <span>🩺</span>
+              <span>{t.doctorPanel}</span>
+            </Link>
+          ) : null}
 
           {isAdmin ? (
             <Link
               href="/dashboard/admin"
               onClick={handleNavClick}
-              className={`mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              className={`${isPatientView ? "mt-4" : ""} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                 pathname.startsWith("/dashboard/admin")
                   ? "bg-amber-500 text-white shadow-sm"
                   : "border border-amber-200 text-amber-700 hover:bg-amber-50"
               }`}
             >
               <span>➕</span>
-              <span>{t.addMedicine}</span>
+              <span>{t.adminPanel}</span>
             </Link>
           ) : null}
         </nav>

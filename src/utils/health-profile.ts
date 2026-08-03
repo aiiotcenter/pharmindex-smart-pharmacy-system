@@ -57,12 +57,13 @@ export function translateGender(gender: string, t: Messages): string {
   return map[gender] ?? gender;
 }
 
-export function translateRole(role: string, t: Messages): string {
-  const map: Record<string, string> = {
-    USER: t.roleUser,
-    ADMIN: t.roleAdmin,
+export function translateRole(roleId: number, t: Messages): string {
+  const map: Record<number, string> = {
+    1: `${t.roleAdmin} (1)`,
+    2: `${t.roleDoctor} (2)`,
+    3: `${t.roleUser} (3)`,
   };
-  return map[role] ?? role;
+  return map[roleId] ?? String(roleId);
 }
 
 export function translateWeekDay(day: number, t: Messages): string {

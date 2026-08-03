@@ -17,18 +17,8 @@ export async function getAdminMedicineFormData() {
 }
 
 export async function addMedicine(input: CreateMedicineInput) {
-  const medicine = await createMedicine({
-    nameEn: input.nameEn,
-    nameTr: input.nameTr,
-    dosageForm: input.dosageForm,
-    usesTr: input.usesTr,
-    usesEn: input.usesEn,
-    sideEffectsTr: input.sideEffectsTr,
-    sideEffectsEn: input.sideEffectsEn,
-  });
-
+  const medicine = await createMedicine(input);
   await linkMedicineIngredient(medicine.medicineId, input.ingredientId);
-
   return medicine;
 }
 

@@ -5,8 +5,11 @@ import { toast } from "sonner";
 import { AdminMedicineForm } from "@/components/admin/AdminMedicineForm";
 import { EmptyState, PageWrapper } from "@/components/PageWrapper";
 import { useI18n } from "@/i18n/I18nProvider";
+import { Role } from "@/lib/roles";
 import { pickLocalizedName, translateDosageForm } from "@/utils/locale-content";
+import { translateRole } from "@/utils/health-profile";
 import type { ActiveIngredient, Medicine } from "@/types/medicine";
+import type { DoctorRoleRequest } from "@/types/doctor-role";
 import type { User } from "@/types/user";
 
 export default function AdminPage() {
@@ -14,20 +17,24 @@ export default function AdminPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [ingredients, setIngredients] = useState<ActiveIngredient[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [doctorRequests, setDoctorRequests] = useState<DoctorRoleRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [medRes, userRes] = await Promise.all([
+      const [medRes, userRes, reqRes] = await Promise.all([
         fetch("/api/admin/medicines"),
         fetch("/api/admin/users"),
+        fetch("/api/admin/doctor-applications?pending=1"),
       ]);
       const medData = await medRes.json();
       const userData = await userRes.json();
+      const reqData = await reqRes.json();
       setMedicines(medData.medicines ?? []);
       setIngredients(medData.ingredients ?? []);
       setUsers(userData.users ?? []);
+      setDoctorRequests(reqData.requests ?? []);
     } finally {
       setLoading(false);
     }
@@ -49,8 +56,63 @@ export default function AdminPage() {
     loadData();
   };
 
+  const handleDoctorRequest = async (requestId: number, action: "approve" | "reject") => {
+    const response = await fetch("/api/admin/doctor-applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestId, action }),
+    });
+    if (!response.ok) {
+      toast.error(t.errorGeneric);
+      return;
+    }
+    toast.success(action === "approve" ? t.approved : t.requestDeleted);
+    loadData();
+  };
+
   return (
     <PageWrapper title={t.adminPanel}>
+      <section className="mb-8 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+          {t.adminDoctorRequests}
+        </h2>
+        {doctorRequests.length === 0 ? (
+          <EmptyState message={t.noData} />
+        ) : (
+          <div className="space-y-3">
+            {doctorRequests.map((request) => (
+              <div
+                key={request.requestId}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 p-4"
+              >
+                <div>
+                  <p className="font-medium text-slate-900">
+                    {request.name} {request.surname} ({request.username})
+                  </p>
+                  <p className="text-sm text-slate-500">{request.email}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDoctorRequest(request.requestId, "approve")}
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                  >
+                    {t.approve}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDoctorRequest(request.requestId, "reject")}
+                    className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
+                  >
+                    {t.reject}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="grid gap-8 xl:grid-cols-2">
         <section className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">
@@ -99,7 +161,7 @@ export default function AdminPage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">
           {t.adminUsers}
         </h2>
@@ -126,12 +188,14 @@ export default function AdminPage() {
                   <td className="py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        user.role === "ADMIN"
+                        user.roleId === Role.ADMIN
                           ? "bg-amber-100 text-amber-700"
-                          : "bg-slate-100 text-slate-600"
+                          : user.roleId === Role.DOCTOR
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-slate-100 text-slate-600"
                       }`}
                     >
-                      {user.role}
+                      {translateRole(user.roleId, t)}
                     </span>
                   </td>
                 </tr>

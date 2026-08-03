@@ -19,6 +19,7 @@ export const registerSchema = z.object({
   email: z.string().email(),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   gender: z.enum(GENDERS),
+  applyAsDoctor: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match.",
   path: ["confirmPassword"],

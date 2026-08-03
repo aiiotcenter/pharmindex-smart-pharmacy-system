@@ -9,28 +9,64 @@ import {
   TextInput,
 } from "@/components/admin/FormField";
 import { useI18n } from "@/i18n/I18nProvider";
+import type { MessageKey } from "@/i18n/messages";
 import type { ActiveIngredient } from "@/types/medicine";
 
-export interface AdminMedicineFormState {
-  nameTr: string;
-  nameEn: string;
-  dosageForm: string;
-  ingredientId: string;
-  usesTr: string;
-  usesEn: string;
-  sideEffectsTr: string;
-  sideEffectsEn: string;
-}
+type BilingualKey =
+  | "usesTr"
+  | "usesEn"
+  | "howToUseTr"
+  | "howToUseEn"
+  | "sideEffectsTr"
+  | "sideEffectsEn"
+  | "contraindicationsTr"
+  | "contraindicationsEn"
+  | "pregnancyTr"
+  | "pregnancyEn"
+  | "breastfeedingTr"
+  | "breastfeedingEn"
+  | "elderlyTr"
+  | "elderlyEn"
+  | "childrenTr"
+  | "childrenEn"
+  | "specialConditionsTr"
+  | "specialConditionsEn";
 
-const emptyForm: AdminMedicineFormState = {
+const bilingualFields: Array<{ tr: BilingualKey; en: BilingualKey; labelKey: MessageKey }> = [
+  { tr: "usesTr", en: "usesEn", labelKey: "whatItDoes" },
+  { tr: "howToUseTr", en: "howToUseEn", labelKey: "howToUse" },
+  { tr: "sideEffectsTr", en: "sideEffectsEn", labelKey: "sideEffects" },
+  { tr: "contraindicationsTr", en: "contraindicationsEn", labelKey: "whoShouldNotUse" },
+  { tr: "pregnancyTr", en: "pregnancyEn", labelKey: "pregnancyUse" },
+  { tr: "breastfeedingTr", en: "breastfeedingEn", labelKey: "breastfeedingUse" },
+  { tr: "elderlyTr", en: "elderlyEn", labelKey: "elderlyUse" },
+  { tr: "childrenTr", en: "childrenEn", labelKey: "childrenUse" },
+  { tr: "specialConditionsTr", en: "specialConditionsEn", labelKey: "specialConditions" },
+];
+
+const emptyForm: Record<BilingualKey | "nameTr" | "nameEn" | "dosageForm" | "ingredientId", string> = {
   nameTr: "",
   nameEn: "",
   dosageForm: "",
   ingredientId: "",
   usesTr: "",
   usesEn: "",
+  howToUseTr: "",
+  howToUseEn: "",
   sideEffectsTr: "",
   sideEffectsEn: "",
+  contraindicationsTr: "",
+  contraindicationsEn: "",
+  pregnancyTr: "",
+  pregnancyEn: "",
+  breastfeedingTr: "",
+  breastfeedingEn: "",
+  elderlyTr: "",
+  elderlyEn: "",
+  childrenTr: "",
+  childrenEn: "",
+  specialConditionsTr: "",
+  specialConditionsEn: "",
 };
 
 export function AdminMedicineForm({
@@ -41,11 +77,21 @@ export function AdminMedicineForm({
   onSaved: () => void;
 }) {
   const { t, locale } = useI18n();
-  const [form, setForm] = useState<AdminMedicineFormState>(emptyForm);
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!form.dosageForm) {
+      toast.error(t.errorValidation);
+      return;
+    }
+    if (!form.ingredientId) {
+      toast.error(t.errorValidation);
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -53,18 +99,21 @@ export function AdminMedicineForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nameTr: form.nameTr,
-          nameEn: form.nameEn,
-          dosageForm: form.dosageForm,
+          ...form,
           ingredientId: Number(form.ingredientId),
-          usesTr: form.usesTr,
-          usesEn: form.usesEn,
-          sideEffectsTr: form.sideEffectsTr,
-          sideEffectsEn: form.sideEffectsEn,
         }),
       });
 
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          toast.error(t.errorForbidden);
+          return;
+        }
+        if (data.details?.fieldErrors) {
+          toast.error(t.errorValidation);
+          return;
+        }
         toast.error(t.errorGeneric);
         return;
       }
@@ -78,80 +127,58 @@ export function AdminMedicineForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="max-h-[70vh] space-y-3 overflow-y-auto pr-2">
       <FormField label={t.nameTr}>
-        <TextInput
-          value={form.nameTr}
-          onChange={(value) => setForm({ ...form, nameTr: value })}
-        />
+        <TextInput value={form.nameTr} onChange={(v) => setForm({ ...form, nameTr: v })} />
       </FormField>
-
       <FormField label={t.nameEn}>
-        <TextInput
-          value={form.nameEn}
-          onChange={(value) => setForm({ ...form, nameEn: value })}
-        />
+        <TextInput value={form.nameEn} onChange={(v) => setForm({ ...form, nameEn: v })} />
       </FormField>
-
       <FormField label={t.medicineType}>
         <DosageFormSelect
           value={form.dosageForm}
-          onChange={(value) => setForm({ ...form, dosageForm: value })}
+          onChange={(v) => setForm({ ...form, dosageForm: v })}
           labels={t.dosageForms}
           placeholder={t.selectOption}
         />
       </FormField>
-
-      <FormField label={t.activeIngredient}>
+      <FormField label={t.activeIngredients}>
         <select
           value={form.ingredientId}
-          onChange={(event) =>
-            setForm({ ...form, ingredientId: event.target.value })
-          }
+          onChange={(e) => setForm({ ...form, ingredientId: e.target.value })}
           required
           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-amber-400"
         >
           <option value="">{t.selectOption}</option>
-          {ingredients.map((ingredient) => (
-            <option key={ingredient.ingredientId} value={ingredient.ingredientId}>
-              {locale === "tr" ? ingredient.nameTr : ingredient.nameEn}
+          {ingredients.map((ing) => (
+            <option key={ing.ingredientId} value={ing.ingredientId}>
+              {locale === "tr" ? ing.nameTr : ing.nameEn}
             </option>
           ))}
         </select>
       </FormField>
 
-      <FormField label={t.formUsesTr} hint={t.pipeSeparatedHint}>
-        <TextArea
-          value={form.usesTr}
-          onChange={(value) => setForm({ ...form, usesTr: value })}
-        />
-      </FormField>
-
-      <FormField label={t.formUsesEn} hint={t.pipeSeparatedHint}>
-        <TextArea
-          value={form.usesEn}
-          onChange={(value) => setForm({ ...form, usesEn: value })}
-        />
-      </FormField>
-
-      <FormField label={t.formSideEffectsTr} hint={t.pipeSeparatedHint}>
-        <TextArea
-          value={form.sideEffectsTr}
-          onChange={(value) => setForm({ ...form, sideEffectsTr: value })}
-        />
-      </FormField>
-
-      <FormField label={t.formSideEffectsEn} hint={t.pipeSeparatedHint}>
-        <TextArea
-          value={form.sideEffectsEn}
-          onChange={(value) => setForm({ ...form, sideEffectsEn: value })}
-        />
-      </FormField>
+      {bilingualFields.map((field) => (
+        <div key={field.tr} className="grid gap-3 sm:grid-cols-2">
+          <FormField label={`${t[field.labelKey]} (TR)`} hint={t.pipeSeparatedHint}>
+            <TextArea
+              value={form[field.tr]}
+              onChange={(v) => setForm({ ...form, [field.tr]: v })}
+            />
+          </FormField>
+          <FormField label={`${t[field.labelKey]} (EN)`} hint={t.pipeSeparatedHint}>
+            <TextArea
+              value={form[field.en]}
+              onChange={(v) => setForm({ ...form, [field.en]: v })}
+            />
+          </FormField>
+        </div>
+      ))}
 
       <button
         type="submit"
         disabled={saving}
-        className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
+        className="sticky bottom-0 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
       >
         {saving ? t.loading : t.save}
       </button>

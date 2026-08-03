@@ -1,5 +1,6 @@
+import type { RoleId } from "@/lib/roles";
+
 export type Gender = "MALE" | "FEMALE" | "OTHER";
-export type UserRole = "USER" | "ADMIN";
 
 export interface User {
   userId: number;
@@ -9,7 +10,7 @@ export interface User {
   email: string;
   birthDate: string;
   gender: Gender;
-  role: UserRole;
+  roleId: RoleId;
   createdAt?: string;
 }
 
@@ -25,6 +26,7 @@ export interface RegisterInput {
   email: string;
   birthDate: string;
   gender: Gender;
+  applyAsDoctor?: boolean;
 }
 
 export interface LoginInput {
@@ -35,4 +37,5 @@ export interface LoginInput {
 export interface AuthResponse {
   user: User;
   token: string;
+  viewMode?: "ADMIN" | "DOCTOR" | "USER";
 }
