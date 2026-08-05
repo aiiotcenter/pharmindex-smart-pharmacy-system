@@ -2,6 +2,7 @@ import "dotenv/config";
 import * as oracledb from "oracledb";
 import {
   CATALOG_DISEASES,
+  CATALOG_DISEASE_MEDICINE_LINKS,
   CATALOG_INGREDIENTS,
   CATALOG_MEDICINES,
 } from "./data/catalog-data";
@@ -217,6 +218,55 @@ async function main(): Promise<void> {
           { autoCommit: false }
         );
       }
+    }
+
+    const diseaseIdsResult = await connection.execute(
+      `SELECT disease_id, name_en FROM diseases`,
+      {},
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    const diseaseIdByName = new Map<string, number>();
+    for (const row of (diseaseIdsResult.rows ?? []) as Array<{
+      DISEASE_ID: number;
+      NAME_EN: string;
+    }>) {
+      diseaseIdByName.set(row.NAME_EN, row.DISEASE_ID);
+    }
+
+    const medicineIdsResult = await connection.execute(
+      `SELECT medicine_id, name_en FROM medicines`,
+      {},
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    const medicineIdByName = new Map<string, number>();
+    for (const row of (medicineIdsResult.rows ?? []) as Array<{
+      MEDICINE_ID: number;
+      NAME_EN: string;
+    }>) {
+      medicineIdByName.set(row.NAME_EN, row.MEDICINE_ID);
+    }
+
+    for (const link of CATALOG_DISEASE_MEDICINE_LINKS) {
+      const diseaseId = diseaseIdByName.get(link.diseaseNameEn);
+      const medicineId = medicineIdByName.get(link.medicineNameEn);
+      if (!diseaseId || !medicineId) continue;
+
+      await connection.execute(
+        `
+        INSERT INTO disease_medicines (disease_id, medicine_id, recommendation_note)
+        SELECT :diseaseId, :medicineId, :noteEn FROM dual
+        WHERE NOT EXISTS (
+          SELECT 1 FROM disease_medicines
+          WHERE disease_id = :diseaseId AND medicine_id = :medicineId
+        )
+        `,
+        {
+          diseaseId,
+          medicineId,
+          noteEn: link.noteEn,
+        },
+        { autoCommit: false }
+      );
     }
 
     const nameBinds: Record<string, string> = {};

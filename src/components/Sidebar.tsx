@@ -16,6 +16,12 @@ const navItems = [
   { href: "/dashboard/health-profile", labelKey: "healthProfile" as const, icon: "❤️" },
 ];
 
+const doctorNavItems = [
+  { href: "/dashboard/doctor", labelKey: "doctorPanel" as const, icon: "🩺" },
+  { href: "/dashboard/doctor/patients", labelKey: "myPatients" as const, icon: "👥" },
+  { href: "/dashboard/doctor/diagnosis", labelKey: "addDiagnosis" as const, icon: "📋" },
+];
+
 export function Sidebar() {
   const { t } = useI18n();
   const pathname = usePathname();
@@ -85,18 +91,28 @@ export function Sidebar() {
             : null}
 
           {isDoctor ? (
-            <Link
-              href="/dashboard/doctor"
-              onClick={handleNavClick}
-              className={`${isPatientView ? "mt-4" : ""} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                pathname.startsWith("/dashboard/doctor")
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-blue-200 text-blue-700 hover:bg-blue-50"
-              }`}
-            >
-              <span>🩺</span>
-              <span>{t.doctorPanel}</span>
-            </Link>
+            <div className={isPatientView ? "mt-4 space-y-1" : "space-y-1"}>
+              {doctorNavItems.map((item) => {
+                const active =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard/doctor" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={handleNavClick}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                      active
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "border border-blue-200 text-blue-700 hover:bg-blue-50"
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{t[item.labelKey]}</span>
+                  </Link>
+                );
+              })}
+            </div>
           ) : null}
 
           {isAdmin ? (

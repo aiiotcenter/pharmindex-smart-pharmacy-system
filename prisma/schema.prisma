@@ -1,6 +1,3 @@
-// Smart Pharmacy — Oracle schema reference
-// Prisma Client does not support Oracle DB officially.
-// Migrations are applied via SQL files in prisma/migrations/ using npm run db:migrate
 
 generator client {
   provider = "prisma-client-js"

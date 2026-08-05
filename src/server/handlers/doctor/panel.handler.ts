@@ -3,16 +3,19 @@ import { getAuthContext } from "@/lib/api-auth";
 import {
   listDoctorRequests,
   listDoctorPatients,
-  listPatientMedicinesForDoctor,
   listPendingMedicinesForDoctor,
   respondDoctorRequest,
-  getPatientProfileForDoctor,
+  getPatientDetailForDoctor,
   isDoctorPatient,
 } from "@/repositories/doctor.repository";
 import {
+  addUserDisease,
+  listDiseases,
+  removeUserDisease,
+} from "@/repositories/disease.repository";
+import {
   addUserAllergy,
   approveUserAllergy,
-  listPatientAllergiesForDoctor,
   listPendingAllergiesForDoctor,
   removeUserAllergy,
 } from "@/repositories/allergy.repository";
@@ -25,6 +28,11 @@ import {
   doctorAddPatientAllergySchema,
   doctorAddPatientMedicineSchema,
 } from "@/server/schemas/medicine.schema";
+import { doctorAddPatientDiseaseSchema } from "@/server/schemas/disease.schema";
+import {
+  provisionTreatmentForDiagnosis,
+  removeTreatmentForDiagnosis,
+} from "@/services/diagnosis-provisioning.service";
 import {
   forbidden,
   internalError,
@@ -60,17 +68,16 @@ export async function GET(request: NextRequest) {
     return jsonOk({ allergies });
   }
 
+  if (view === "disease-catalog") {
+    const diseases = await listDiseases();
+    return jsonOk({ diseases });
+  }
+
   const patientId = Number(searchParams.get("patientId"));
   if (patientId) {
-    const allowed = await isDoctorPatient(auth.userId, patientId);
-    if (!allowed) return forbidden();
-    const [profile, medicines, allergies] = await Promise.all([
-      getPatientProfileForDoctor(patientId),
-      listPatientMedicinesForDoctor(patientId),
-      listPatientAllergiesForDoctor(patientId),
-    ]);
-    if (!profile) return notFound();
-    return jsonOk({ profile, medicines, allergies });
+    const patient = await getPatientDetailForDoctor(auth.userId, patientId);
+    if (!patient) return forbidden();
+    return jsonOk({ patient });
   }
 
   const patients = await listDoctorPatients(auth.userId);
@@ -126,6 +133,20 @@ export async function POST(request: NextRequest) {
       return jsonOk({ success: true }, 201);
     }
 
+    if (body.action === "add-disease") {
+      const parsed = doctorAddPatientDiseaseSchema.safeParse(body);
+      if (!parsed.success) return validationError(parsed.error.flatten());
+      const allowed = await isDoctorPatient(auth.userId, parsed.data.patientId);
+      if (!allowed) return forbidden();
+      await addUserDisease(parsed.data.patientId, parsed.data.diseaseId);
+      const provision = await provisionTreatmentForDiagnosis(
+        parsed.data.patientId,
+        parsed.data.diseaseId,
+        auth.userId
+      );
+      return jsonOk({ success: true, provision }, 201);
+    }
+
     const parsed = doctorAddPatientMedicineSchema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error.flatten());
 
@@ -145,12 +166,13 @@ export async function POST(request: NextRequest) {
     return jsonOk({ userMedicineId }, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "MEDICINE_NOT_FOUND" || message === "INGREDIENT_NOT_FOUND") {
+    if (message === "MEDICINE_NOT_FOUND" || message === "INGREDIENT_NOT_FOUND" || message === "DISEASE_NOT_FOUND") {
       return notFound();
     }
     if (
       message === "MEDICINE_ALREADY_ACTIVE" ||
-      message === "ALLERGY_ALREADY_EXISTS"
+      message === "ALLERGY_ALREADY_EXISTS" ||
+      message === "DISEASE_ALREADY_EXISTS"
     ) {
       return jsonError(message, 409);
     }
@@ -168,11 +190,18 @@ export async function DELETE(request: NextRequest) {
   const ingredientId = Number(
     new URL(request.url).searchParams.get("ingredientId")
   );
+  const diseaseId = Number(new URL(request.url).searchParams.get("diseaseId"));
 
   if (!patientId) return validationError();
 
   const allowed = await isDoctorPatient(auth.userId, patientId);
   if (!allowed) return forbidden();
+
+  if (diseaseId) {
+    await removeTreatmentForDiagnosis(patientId, diseaseId);
+    const ok = await removeUserDisease(patientId, diseaseId);
+    return ok ? jsonOk({ success: true }) : notFound();
+  }
 
   if (ingredientId) {
     const ok = await removeUserAllergy(patientId, ingredientId);

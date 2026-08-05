@@ -1,4 +1,4 @@
--- Smart Pharmacy Oracle schema (10 tables)
+
 
 CREATE TABLE users (
     user_id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

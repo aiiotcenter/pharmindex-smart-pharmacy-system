@@ -3,8 +3,12 @@ import type {
   DoctorListItem,
   DoctorPatientRequest,
   DoctorPatientSummary,
+  PatientDetailForDoctor,
   PatientMedicineItem,
 } from "@/types/doctor";
+import { defaultHealthProfile } from "@/types/health-profile";
+import { listUserDiseasesDetailed } from "@/repositories/disease.repository";
+import { listPatientAllergiesForDoctor } from "@/repositories/allergy.repository";
 
 export async function listDoctors(): Promise<DoctorListItem[]> {
   const rows = await executeQuery<Record<string, unknown>>(
@@ -163,6 +167,79 @@ export async function isDoctorPatient(
     { doctorId, patientId }
   );
   return (rows[0]?.CNT ?? 0) > 0;
+}
+
+export async function getPatientDetailForDoctor(
+  doctorId: number,
+  patientId: number
+): Promise<PatientDetailForDoctor | null> {
+  const allowed = await isDoctorPatient(doctorId, patientId);
+  if (!allowed) return null;
+
+  const userRows = await executeQuery<Record<string, unknown>>(
+    `
+    SELECT u.user_id, u.username, u.name, u.surname, u.email, u.birth_date, u.gender,
+           dp.linked_at
+    FROM users u
+    JOIN doctor_patients dp ON dp.patient_id = u.user_id AND dp.doctor_id = :doctorId
+    WHERE u.user_id = :patientId
+    `,
+    { doctorId, patientId }
+  );
+  if (!userRows[0]) return null;
+
+  const row = userRows[0];
+  const profileRows = await executeQuery<Record<string, unknown>>(
+    `SELECT * FROM user_health_profile WHERE user_id = :patientId`,
+    { patientId }
+  );
+  const profileRow = profileRows[0];
+
+  const [diseases, allergies, medicines] = await Promise.all([
+    listUserDiseasesDetailed(patientId),
+    listPatientAllergiesForDoctor(patientId),
+    listPatientMedicinesForDoctor(patientId),
+  ]);
+
+  return {
+    patientId: Number(row.USER_ID),
+    username: String(row.USERNAME),
+    name: String(row.NAME),
+    surname: String(row.SURNAME),
+    email: String(row.EMAIL),
+    birthDate: row.BIRTH_DATE ? String(row.BIRTH_DATE) : null,
+    gender: row.GENDER ? String(row.GENDER) : null,
+    linkedAt: row.LINKED_AT ? String(row.LINKED_AT) : null,
+    healthProfile: profileRow
+      ? {
+          pregnancy: Number(profileRow.PREGNANCY) === 1,
+          breastfeeding: Number(profileRow.BREASTFEEDING) === 1,
+          elderly: Number(profileRow.ELDERLY) === 1,
+          menopause: Number(profileRow.MENOPAUSE) === 1,
+          menstruation: Number(profileRow.MENSTRUATION) === 1,
+          pregnancyPlanning: Number(profileRow.PREGNANCY_PLANNING) === 1,
+          prostateHistory: Number(profileRow.PROSTATE_HISTORY) === 1,
+          testosteroneTherapy: Number(profileRow.TESTOSTERONE_THERAPY) === 1,
+        }
+      : { ...defaultHealthProfile },
+    diseases: diseases.map((d) => ({
+      diseaseId: d.diseaseId,
+      nameTr: d.nameTr,
+      nameEn: d.nameEn,
+      descriptionTr: d.descriptionTr,
+      descriptionEn: d.descriptionEn,
+      diagnosedDate: d.diagnosedDate,
+    })),
+    allergies: allergies.map((a) => ({
+      ingredientId: a.ingredientId,
+      nameTr: a.nameTr,
+      nameEn: a.nameEn,
+      severity: a.severity,
+      approvalStatus: a.approvalStatus,
+      addedBy: a.addedBy,
+    })),
+    medicines,
+  };
 }
 
 export async function getPatientProfileForDoctor(patientId: number) {

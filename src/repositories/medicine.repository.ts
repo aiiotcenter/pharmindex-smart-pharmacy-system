@@ -1,4 +1,5 @@
 import { executeQuery, executeMutation } from "@/lib/db";
+import { deleteSchedulesForUserMedicine } from "@/repositories/schedule.repository";
 import type { Medicine } from "@/types/medicine";
 
 interface DbMedicineRow {
@@ -308,6 +309,7 @@ export async function addUserMedicine(input: {
 }
 
 export async function removeUserMedicine(userMedicineId: number): Promise<boolean> {
+  await deleteSchedulesForUserMedicine(userMedicineId);
   const affected = await executeMutation(
     `UPDATE user_medicines SET is_active = 0 WHERE user_medicine_id = :userMedicineId`,
     { userMedicineId }

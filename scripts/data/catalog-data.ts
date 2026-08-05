@@ -180,3 +180,63 @@ export const CATALOG_MEDICINES: CatalogMedicine[] = [
   { nameEn: "Azithromycin 500 mg", nameTr: "Azithromycin 500 mg", descEn: "Macrolide antibiotic tablet.", descTr: "Makrolid antibiyotik tablet.", dosageForm: "TABLET", ingredientIndex: 31, amountMg: 500 },
   { nameEn: "Diflucan 150 mg", nameTr: "Diflucan 150 mg", descEn: "Fluconazole antifungal capsule.", descTr: "Flukonazol antifungal kapsül.", dosageForm: "CAPSULE", ingredientIndex: 35, amountMg: 150 },
 ];
+
+export interface CatalogDiseaseMedicineLink {
+  diseaseNameEn: string;
+  medicineNameEn: string;
+  noteEn: string;
+  noteTr: string;
+}
+
+export const CATALOG_DISEASE_MEDICINE_LINKS: CatalogDiseaseMedicineLink[] = [
+  { diseaseNameEn: "Type 2 Diabetes", medicineNameEn: "Glucophage 850 mg", noteEn: "First-line oral antidiabetic.", noteTr: "Birinci basamak oral antidiyabetik." },
+  { diseaseNameEn: "Hypertension", medicineNameEn: "Cozaar 50 mg", noteEn: "Blood pressure control.", noteTr: "Tansiyon kontrolü." },
+  { diseaseNameEn: "Asthma", medicineNameEn: "Ventolin Evohaler", noteEn: "Rescue bronchodilator.", noteTr: "Kurtarıcı bronkodilatör." },
+  { diseaseNameEn: "Migraine", medicineNameEn: "Parol 500 mg", noteEn: "Pain relief for migraine attacks.", noteTr: "Migren ataklarında ağrı kesici." },
+  { diseaseNameEn: "GERD", medicineNameEn: "Losec 20 mg", noteEn: "Acid reflux control.", noteTr: "Asit reflüsü kontrolü." },
+  { diseaseNameEn: "Hypothyroidism", medicineNameEn: "Euthyrox 100 mcg", noteEn: "Thyroid hormone replacement.", noteTr: "Tiroid hormonu replasmanı." },
+  { diseaseNameEn: "Hyperthyroidism", medicineNameEn: "Beloc 50 mg", noteEn: "Symptom control adjunct.", noteTr: "Semptom kontrolü destek tedavisi." },
+  { diseaseNameEn: "Osteoarthritis", medicineNameEn: "Brufen 400 mg", noteEn: "NSAID for joint pain.", noteTr: "Eklem ağrısı için NSAID." },
+  { diseaseNameEn: "Rheumatoid Arthritis", medicineNameEn: "Deltacortril 5 mg", noteEn: "Anti-inflammatory therapy.", noteTr: "Anti-inflamatuar tedavi." },
+  { diseaseNameEn: "COPD", medicineNameEn: "Spiriva Respimat", noteEn: "Maintenance bronchodilator.", noteTr: "Koruyucu bronkodilatör." },
+  { diseaseNameEn: "Coronary Artery Disease", medicineNameEn: "Coraspin 100 mg", noteEn: "Antiplatelet therapy.", noteTr: "Antitrombosit tedavi." },
+  { diseaseNameEn: "Heart Failure", medicineNameEn: "Lasix 40 mg", noteEn: "Diuretic for fluid management.", noteTr: "Sıvı yönetimi için diüretik." },
+  { diseaseNameEn: "Atrial Fibrillation", medicineNameEn: "Eliquis 5 mg", noteEn: "Anticoagulation therapy.", noteTr: "Antikoagülan tedavi." },
+  { diseaseNameEn: "Stroke", medicineNameEn: "Plavix 75 mg", noteEn: "Secondary prevention.", noteTr: "Sekonder profilaksi." },
+  { diseaseNameEn: "Epilepsy", medicineNameEn: "Parol 500 mg", noteEn: "Supportive care per specialist.", noteTr: "Uzman önerisiyle destekleyici bakım." },
+  { diseaseNameEn: "Parkinson Disease", medicineNameEn: "Parol 500 mg", noteEn: "Symptom support as prescribed.", noteTr: "Reçeteye göre semptom desteği." },
+  { diseaseNameEn: "Multiple Sclerosis", medicineNameEn: "Deltacortril 5 mg", noteEn: "Acute relapse management.", noteTr: "Akut atak yönetimi." },
+  { diseaseNameEn: "Depression", medicineNameEn: "Zoloft 50 mg", noteEn: "SSRI antidepressant.", noteTr: "SSRI antidepresan." },
+  { diseaseNameEn: "Anxiety Disorder", medicineNameEn: "Zoloft 50 mg", noteEn: "SSRI for anxiety management.", noteTr: "Anksiyete yönetimi için SSRI." },
+  { diseaseNameEn: "Bipolar Disorder", medicineNameEn: "Prozac 20 mg", noteEn: "Mood stabilizer adjunct.", noteTr: "Duygu durum düzenleyici destek." },
+  { diseaseNameEn: "Psoriasis", medicineNameEn: "Deltacortril 5 mg", noteEn: "Topical/systemic per protocol.", noteTr: "Protokole göre tedavi." },
+  { diseaseNameEn: "Atopic Dermatitis", medicineNameEn: "Zyrtec 10 mg", noteEn: "Antihistamine for itching.", noteTr: "Kaşıntı için antihistaminik." },
+  { diseaseNameEn: "Chronic Kidney Disease", medicineNameEn: "Lasix 40 mg", noteEn: "Fluid and pressure management.", noteTr: "Sıvı ve basınç yönetimi." },
+  { diseaseNameEn: "Urinary Tract Infection", medicineNameEn: "Cipro 500 mg", noteEn: "Antibiotic therapy.", noteTr: "Antibiyotik tedavisi." },
+  { diseaseNameEn: "Benign Prostatic Hyperplasia", medicineNameEn: "Cozaar 50 mg", noteEn: "Blood pressure and symptom support.", noteTr: "Tansiyon ve semptom desteği." },
+  { diseaseNameEn: "Iron Deficiency Anemia", medicineNameEn: "Parol 500 mg", noteEn: "Supportive care.", noteTr: "Destekleyici bakım." },
+  { diseaseNameEn: "Vitamin D Deficiency", medicineNameEn: "Parol 500 mg", noteEn: "Supplementation per labs.", noteTr: "Tetkiklere göre destek." },
+  { diseaseNameEn: "Obesity", medicineNameEn: "Glucophage 850 mg", noteEn: "Metabolic support when indicated.", noteTr: "Endike olduğunda metabolik destek." },
+  { diseaseNameEn: "Hyperlipidemia", medicineNameEn: "Lipitor 20 mg", noteEn: "Statin therapy.", noteTr: "Statin tedavisi." },
+  { diseaseNameEn: "Gout", medicineNameEn: "Brufen 400 mg", noteEn: "Acute flare pain control.", noteTr: "Akut atak ağrı kontrolü." },
+  { diseaseNameEn: "Fibromyalgia", medicineNameEn: "Parol 500 mg", noteEn: "Pain management.", noteTr: "Ağrı yönetimi." },
+  { diseaseNameEn: "Osteoporosis", medicineNameEn: "Parol 500 mg", noteEn: "Supportive bone health plan.", noteTr: "Kemik sağlığı destek planı." },
+  { diseaseNameEn: "Celiac Disease", medicineNameEn: "Losec 20 mg", noteEn: "GI symptom support.", noteTr: "GIS semptom desteği." },
+  { diseaseNameEn: "Irritable Bowel Syndrome", medicineNameEn: "Losec 20 mg", noteEn: "GI symptom relief.", noteTr: "GIS semptom rahatlatma." },
+  { diseaseNameEn: "Crohn Disease", medicineNameEn: "Deltacortril 5 mg", noteEn: "Anti-inflammatory therapy.", noteTr: "Anti-inflamatuar tedavi." },
+  { diseaseNameEn: "Ulcerative Colitis", medicineNameEn: "Deltacortril 5 mg", noteEn: "Anti-inflammatory therapy.", noteTr: "Anti-inflamatuar tedavi." },
+  { diseaseNameEn: "Hepatitis B", medicineNameEn: "Parol 500 mg", noteEn: "Supportive care per specialist.", noteTr: "Uzman önerisiyle destekleyici bakım." },
+  { diseaseNameEn: "Nonalcoholic Fatty Liver", medicineNameEn: "Lipitor 20 mg", noteEn: "Lipid management.", noteTr: "Lipid yönetimi." },
+  { diseaseNameEn: "Glaucoma", medicineNameEn: "Parol 500 mg", noteEn: "Per ophthalmology plan.", noteTr: "Göz hekimliği planına göre." },
+  { diseaseNameEn: "Allergic Rhinitis", medicineNameEn: "Zyrtec 10 mg", noteEn: "Daily antihistamine.", noteTr: "Günlük antihistaminik." },
+  { diseaseNameEn: "Sinusitis", medicineNameEn: "Augmentin 875/125 mg", noteEn: "Antibiotic when bacterial.", noteTr: "Bakteriyel ise antibiyotik." },
+  { diseaseNameEn: "Acute Bronchitis", medicineNameEn: "Ventolin Evohaler", noteEn: "Bronchodilator support.", noteTr: "Bronkodilatör desteği." },
+  { diseaseNameEn: "Community-Acquired Pneumonia", medicineNameEn: "Azithromycin 500 mg", noteEn: "Empiric antibiotic therapy.", noteTr: "Ampirik antibiyotik tedavisi." },
+  { diseaseNameEn: "Influenza", medicineNameEn: "Parol 500 mg", noteEn: "Fever and pain control.", noteTr: "Ateş ve ağrı kontrolü." },
+  { diseaseNameEn: "Peptic Ulcer Disease", medicineNameEn: "Losec 20 mg", noteEn: "PPI therapy.", noteTr: "PPI tedavisi." },
+  { diseaseNameEn: "Varicose Veins", medicineNameEn: "Lasix 40 mg", noteEn: "Edema management.", noteTr: "Ödem yönetimi." },
+  { diseaseNameEn: "Deep Vein Thrombosis", medicineNameEn: "Xarelto 20 mg", noteEn: "Anticoagulation therapy.", noteTr: "Antikoagülan tedavi." },
+  { diseaseNameEn: "Insomnia", medicineNameEn: "Parol 500 mg", noteEn: "Sleep hygiene and support.", noteTr: "Uyku hijyeni ve destek." },
+  { diseaseNameEn: "Attention Deficit Hyperactivity Disorder", medicineNameEn: "Parol 500 mg", noteEn: "Per psychiatry plan.", noteTr: "Psikiyatri planına göre." },
+  { diseaseNameEn: "Polycystic Ovary Syndrome", medicineNameEn: "Glucophage 850 mg", noteEn: "Insulin sensitizer when indicated.", noteTr: "Endike olduğunda insülin duyarlaştırıcı." },
+];

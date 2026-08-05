@@ -1,4 +1,4 @@
-import { executeQuery } from "@/lib/db";
+import { executeMutation, executeQuery } from "@/lib/db";
 import type { Disease } from "@/types/disease";
 
 interface DbDiseaseRow {
@@ -63,4 +63,114 @@ export async function listUserDiseases(userId: number): Promise<Disease[]> {
   );
 
   return rows.map(mapDisease);
+}
+
+interface DbUserDiseaseRow extends DbDiseaseRow {
+  DIAGNOSED_DATE?: string | null;
+}
+
+export async function listUserDiseasesDetailed(userId: number) {
+  const rows = await executeQuery<DbUserDiseaseRow>(
+    `
+    SELECT d.disease_id, d.name_en, d.name_tr, d.description_en, d.description_tr,
+           ud.diagnosed_date
+    FROM user_diseases ud
+    JOIN diseases d ON d.disease_id = ud.disease_id
+    WHERE ud.user_id = :userId
+    ORDER BY d.disease_id
+    `,
+    { userId }
+  );
+
+  return rows.map((row) => ({
+    ...mapDisease(row),
+    diagnosedDate: row.DIAGNOSED_DATE ?? null,
+  }));
+}
+
+export async function addUserDisease(
+  userId: number,
+  diseaseId: number
+): Promise<void> {
+  const disease = await findDiseaseById(diseaseId);
+  if (!disease) throw new Error("DISEASE_NOT_FOUND");
+
+  const existing = await executeQuery<{ CNT: number }>(
+    `
+    SELECT COUNT(*) AS cnt FROM user_diseases
+    WHERE user_id = :userId AND disease_id = :diseaseId
+    `,
+    { userId, diseaseId }
+  );
+  if ((existing[0]?.CNT ?? 0) > 0) {
+    throw new Error("DISEASE_ALREADY_EXISTS");
+  }
+
+  await executeMutation(
+    `
+    INSERT INTO user_diseases (user_id, disease_id, diagnosed_date)
+    VALUES (:userId, :diseaseId, TRUNC(SYSDATE))
+    `,
+    { userId, diseaseId }
+  );
+}
+
+export async function removeUserDisease(
+  userId: number,
+  diseaseId: number
+): Promise<boolean> {
+  const affected = await executeMutation(
+    `
+    DELETE FROM user_diseases
+    WHERE user_id = :userId AND disease_id = :diseaseId
+    `,
+    { userId, diseaseId }
+  );
+  return affected > 0;
+}
+
+export async function listMedicinesForDisease(diseaseId: number) {
+  const rows = await executeQuery<{
+    MEDICINE_ID: number;
+    NAME_TR: string;
+    NAME_EN: string;
+    DOSAGE_FORM?: string | null;
+    RECOMMENDATION_NOTE?: string | null;
+  }>(
+    `
+    SELECT m.medicine_id, m.name_tr, m.name_en, m.dosage_form, dm.recommendation_note
+    FROM disease_medicines dm
+    JOIN medicines m ON m.medicine_id = dm.medicine_id
+    WHERE dm.disease_id = :diseaseId
+    ORDER BY m.medicine_id
+    `,
+    { diseaseId }
+  );
+
+  return rows.map((row) => ({
+    medicineId: row.MEDICINE_ID,
+    nameTr: row.NAME_TR,
+    nameEn: row.NAME_EN,
+    dosageForm: row.DOSAGE_FORM,
+    recommendationNote: row.RECOMMENDATION_NOTE,
+  }));
+}
+
+export async function isMedicineLinkedToOtherUserDiseases(
+  userId: number,
+  medicineId: number,
+  excludeDiseaseId: number
+): Promise<boolean> {
+  const rows = await executeQuery<{ CNT: number }>(
+    `
+    SELECT COUNT(*) AS cnt
+    FROM disease_medicines dm
+    JOIN user_diseases ud ON ud.disease_id = dm.disease_id
+    WHERE ud.user_id = :userId
+      AND dm.medicine_id = :medicineId
+      AND ud.disease_id <> :excludeDiseaseId
+    `,
+    { userId, medicineId, excludeDiseaseId }
+  );
+  return (rows[0]?.CNT ?? 0) > 0;
 }

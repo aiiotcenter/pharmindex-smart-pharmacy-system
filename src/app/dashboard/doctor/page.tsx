@@ -89,8 +89,8 @@ export default function DoctorPanelPage() {
     setSelectedPatient(patientId);
     const res = await fetch(`/api/doctor/panel?patientId=${patientId}`);
     const data = await res.json();
-    setPatientMedicines(data.medicines ?? []);
-    setPatientAllergies(data.allergies ?? []);
+    setPatientMedicines(data.patient?.medicines ?? []);
+    setPatientAllergies(data.patient?.allergies ?? []);
   };
 
   useEffect(() => {

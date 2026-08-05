@@ -1,4 +1,147 @@
-import { executeQuery } from "@/lib/db";
+import { executeMutation, executeQuery } from "@/lib/db";
+
+export interface ScheduleTemplate {
+  frequencyType: "DAILY" | "WEEKLY" | "MONTHLY";
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  timeOfDay: string;
+  notesTr: string;
+  notesEn: string;
+}
+
+export function getDefaultScheduleTemplates(
+  dosageForm?: string | null
+): ScheduleTemplate[] {
+  switch (dosageForm) {
+    case "INHALER":
+      return [
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "09:00",
+          notesTr: "Sabah inhaler dozu",
+          notesEn: "Morning inhaler dose",
+        },
+      ];
+    case "SYRUP":
+      return [
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "08:00",
+          notesTr: "Kahvaltıdan sonra alın",
+          notesEn: "Take after breakfast",
+        },
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "20:00",
+          notesTr: "Akşam dozu",
+          notesEn: "Evening dose",
+        },
+      ];
+    case "INJECTION":
+      return [
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "08:00",
+          notesTr: "Sabah enjeksiyon dozu",
+          notesEn: "Morning injection dose",
+        },
+      ];
+    case "CAPSULE":
+      return [
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "09:00",
+          notesTr: "Sabah aç veya tok karnına alın",
+          notesEn: "Take in the morning with or without food",
+        },
+      ];
+    default:
+      return [
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "09:00",
+          notesTr: "Sabah alın",
+          notesEn: "Take in the morning",
+        },
+        {
+          frequencyType: "DAILY",
+          timeOfDay: "21:00",
+          notesTr: "Akşam alın",
+          notesEn: "Take in the evening",
+        },
+      ];
+  }
+}
+
+export async function countSchedulesForUserMedicine(
+  userMedicineId: number
+): Promise<number> {
+  const rows = await executeQuery<{ CNT: number }>(
+    `
+    SELECT COUNT(*) AS cnt FROM medicine_schedules
+    WHERE user_medicine_id = :userMedicineId
+    `,
+    { userMedicineId }
+  );
+  return rows[0]?.CNT ?? 0;
+}
+
+export async function createMedicineSchedule(input: {
+  userMedicineId: number;
+  frequencyType: "DAILY" | "WEEKLY" | "MONTHLY";
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  timeOfDay: string;
+  notesTr?: string | null;
+  notesEn?: string | null;
+}): Promise<void> {
+  await executeMutation(
+    `
+    INSERT INTO medicine_schedules (
+      user_medicine_id, frequency_type, day_of_week, day_of_month,
+      time_of_day, notes, notes_tr, notes_en
+    ) VALUES (
+      :userMedicineId, :frequencyType, :dayOfWeek, :dayOfMonth,
+      :timeOfDay, :notesEn, :notesTr, :notesEn
+    )
+    `,
+    {
+      userMedicineId: input.userMedicineId,
+      frequencyType: input.frequencyType,
+      dayOfWeek: input.dayOfWeek ?? null,
+      dayOfMonth: input.dayOfMonth ?? null,
+      timeOfDay: input.timeOfDay,
+      notesTr: input.notesTr ?? null,
+      notesEn: input.notesEn ?? null,
+    }
+  );
+}
+
+export async function createDefaultSchedulesForUserMedicine(
+  userMedicineId: number,
+  dosageForm?: string | null
+): Promise<number> {
+  const existing = await countSchedulesForUserMedicine(userMedicineId);
+  if (existing > 0) return 0;
+
+  const templates = getDefaultScheduleTemplates(dosageForm);
+  for (const template of templates) {
+    await createMedicineSchedule({
+      userMedicineId,
+      ...template,
+    });
+  }
+  return templates.length;
+}
+
+export async function deleteSchedulesForUserMedicine(
+  userMedicineId: number
+): Promise<void> {
+  await executeMutation(
+    `DELETE FROM medicine_schedules WHERE user_medicine_id = :userMedicineId`,
+    { userMedicineId }
+  );
+}
 
 export interface UserReminder {
   scheduleId: number;
@@ -47,6 +190,7 @@ export async function listUserReminders(
     JOIN user_medicines um ON um.user_medicine_id = ms.user_medicine_id
     JOIN medicines m ON m.medicine_id = um.medicine_id
     WHERE um.user_id = :userId
+      AND um.is_active = 1
     ORDER BY ms.time_of_day
     `,
     { userId }
